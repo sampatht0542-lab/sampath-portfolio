@@ -1217,5 +1217,444 @@ const barObs = new IntersectionObserver((entries) => {
 }, { threshold: 0.3 });
 document.querySelectorAll('.skill-card, .stats-terminal').forEach(c => barObs.observe(c));
 </script>
+
+<!-- CHATBOT -->
+<style>
+#chat-btn {
+  position: fixed; bottom: 32px; right: 32px; z-index: 1000;
+  width: 56px; height: 56px;
+  background: var(--accent); border-radius: 50%; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: none; box-shadow: 0 4px 24px rgba(0,255,170,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+#chat-btn:hover { transform: scale(1.1); box-shadow: 0 8px 32px rgba(0,255,170,0.5); }
+#chat-btn svg { width: 26px; height: 26px; fill: var(--bg); }
+#chat-btn .close-icon { display: none; font-size: 22px; color: var(--bg); font-weight: 700; line-height: 1; }
+#chat-btn.open .chat-icon { display: none; }
+#chat-btn.open .close-icon { display: block; }
+
+#chat-window {
+  position: fixed; bottom: 100px; right: 32px; z-index: 999;
+  width: 360px; max-height: 520px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  transform: translateY(20px) scale(0.95);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+}
+#chat-window.open {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+  pointer-events: all;
+}
+.chat-header {
+  background: #111d2a;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 18px;
+  display: flex; align-items: center; gap: 10px;
+}
+.chat-header-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+.chat-header-text { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); }
+.chat-header-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
+
+#chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+  scrollbar-width: thin; scrollbar-color: rgba(0,255,170,0.2) transparent;
+}
+#chat-messages::-webkit-scrollbar { width: 4px; }
+#chat-messages::-webkit-scrollbar-thumb { background: rgba(0,255,170,0.2); border-radius: 4px; }
+
+.msg { max-width: 85%; display: flex; flex-direction: column; gap: 4px; }
+.msg.bot { align-self: flex-start; }
+.msg.user { align-self: flex-end; }
+.msg-bubble {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.msg.bot .msg-bubble {
+  background: rgba(0,255,170,0.07);
+  border: 1px solid rgba(0,255,170,0.15);
+  color: var(--text);
+  border-bottom-left-radius: 3px;
+}
+.msg.user .msg-bubble {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+  border-bottom-right-radius: 3px;
+}
+.msg-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  padding: 0 4px;
+}
+.msg.user .msg-time { text-align: right; }
+
+.chat-suggestions {
+  padding: 8px 16px;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  border-top: 1px solid var(--border);
+}
+.suggestion-chip {
+  padding: 5px 10px;
+  background: rgba(0,255,170,0.05);
+  border: 1px solid rgba(0,255,170,0.2);
+  border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  cursor: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.suggestion-chip:hover { background: rgba(0,255,170,0.15); }
+
+.chat-input-row {
+  padding: 12px 16px;
+  display: flex; gap: 8px; align-items: center;
+  border-top: 1px solid var(--border);
+}
+#chat-input {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+#chat-input:focus { border-color: rgba(0,255,170,0.4); }
+#chat-input::placeholder { color: var(--muted); }
+#chat-send {
+  width: 36px; height: 36px;
+  background: var(--accent);
+  border: none; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: none; transition: background 0.2s;
+  flex-shrink: 0;
+}
+#chat-send:hover { background: #00e699; }
+#chat-send svg { width: 16px; height: 16px; fill: var(--bg); }
+
+.typing-indicator {
+  display: flex; gap: 4px; align-items: center; padding: 4px 2px;
+}
+.typing-indicator span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); opacity: 0.5;
+  animation: typing-bounce 1.2s infinite;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing-bounce {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+@media (max-width: 600px) {
+  #chat-window { width: calc(100vw - 32px); right: 16px; }
+  #chat-btn { right: 16px; bottom: 20px; }
+}
+</style>
+
+<button id="chat-btn" aria-label="Open chat">
+  <svg class="chat-icon" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+  <span class="close-icon">✕</span>
+</button>
+
+<div id="chat-window">
+  <div class="chat-header">
+    <div class="chat-header-dot"></div>
+    <div class="chat-header-text">sampath.bot</div>
+    <div class="chat-header-sub">Ask me anything</div>
+  </div>
+  <div id="chat-messages"></div>
+  <div class="chat-suggestions" id="chat-suggestions">
+    <button class="suggestion-chip">Morgan Stanley work?</button>
+    <button class="suggestion-chip">Skills?</button>
+    <button class="suggestion-chip">Certifications?</button>
+    <button class="suggestion-chip">Available to hire?</button>
+  </div>
+  <div class="chat-input-row">
+    <input id="chat-input" type="text" placeholder="Ask about Sampath's experience..." maxlength="200" autocomplete="off" />
+    <button id="chat-send">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const KB = [
+    {
+      keys: ['morgan stanley','morgan','ms','current','now','present','latest job','current role','current company'],
+      answer: `At <strong>Morgan Stanley</strong> (Sep 2025 – Present) I work as a Cyber Security Engineer:<br><br>
+• Optimized Splunk + Microsoft Sentinel workflows ingesting AWS CloudTrail & EDR telemetry — cut response time <strong>5 → 3.2 hours</strong><br>
+• Developed MITRE ATT&CK-aligned rules, eliminating <strong>120+ false positives/month</strong><br>
+• Built SOAR playbooks (Python + REST APIs) for EC2 isolation & IAM revocation within <strong>15 minutes</strong><br>
+• Remediated <strong>110+ cloud misconfigs</strong> across S3, RDS, KMS (SOX & PCI-DSS aligned)`
+    },
+    {
+      keys: ['airbnb','second job','previous role','previous company'],
+      answer: `At <strong>Airbnb</strong> (Aug 2021 – Dec 2023) as Cyber Security Engineer:<br><br>
+• Implemented Zero Trust architecture via Terraform + IAM across AWS platform services<br>
+• Engineered DevSecOps pipeline (Burp Suite + OWASP ZAP → CI/CD) — vuln SLA <strong>30 → 7 days</strong>, false positives ↓ <strong>70%</strong><br>
+• Secured <strong>150+ public-facing endpoints</strong> with runtime protection + WAF<br>
+• Consolidated <strong>25 secret stores → 6</strong> centralized vault systems<br>
+• Automated GDPR/CCPA reporting, saving <strong>200+ hours/year</strong>`
+    },
+    {
+      keys: ['dell','dell technologies','first job','early career','junior'],
+      answer: `At <strong>Dell Technologies</strong> (Jan 2020 – Jul 2021) as Junior Cyber Security Engineer:<br><br>
+• Network segmentation via AD Group Policies across <strong>850+ endpoints</strong><br>
+• Deployed PowerProtect Cyber Recovery vaults (CloudFormation + Terraform) across <strong>5 data centers</strong> — protected <strong>12TB</strong> of data<br>
+• Built Python SIEM integrations with CrowdStrike Falcon + <strong>60+ custom IOCs</strong> — endpoint response <strong>4.2h → 45 min</strong><br>
+• Applied STIG hardening via PowerShell across <strong>150+ servers</strong>`
+    },
+    {
+      keys: ['experience','background','work history','career','jobs','companies','where have you worked'],
+      answer: `Sampath has <strong>4+ years</strong> of cybersecurity experience across three companies:<br><br>
+1. <strong>Morgan Stanley</strong> (Sep 2025 – Present) — Cyber Security Engineer<br>
+2. <strong>Airbnb</strong> (Aug 2021 – Dec 2023) — Cyber Security Engineer<br>
+3. <strong>Dell Technologies</strong> (Jan 2020 – Jul 2021) — Junior Cyber Security Engineer<br><br>
+Ask me about any specific company for details!`
+    },
+    {
+      keys: ['splunk','sentinel','siem','soc','detection','alert','triage','monitoring'],
+      answer: `Sampath has <strong>expert-level</strong> Splunk Enterprise SIEM and <strong>advanced</strong> Microsoft Sentinel skills:<br><br>
+• At Morgan Stanley: optimized Splunk + Sentinel workflows, cut response time 36%<br>
+• Develops MITRE ATT&CK-aligned correlation rules and risk-based alerts<br>
+• Builds SOAR playbooks for automated incident response<br>
+• Deep experience with EDR/XDR telemetry, log analysis, and alert triage`
+    },
+    {
+      keys: ['aws','cloud','s3','ec2','iam','cloudtrail','kms','rds','cloud security','azure'],
+      answer: `Sampath's cloud security stack:<br><br>
+• <strong>AWS</strong>: IAM, EC2, S3, RDS, CloudTrail, KMS — advanced level<br>
+• Enforced least-privilege IAM and Zero Trust across platform services<br>
+• Remediated 110+ cloud misconfigurations at Morgan Stanley<br>
+• Deployed immutable backup vaults using CloudFormation + Terraform<br>
+• Also experienced with Azure AD, RBAC, and CSPM tools`
+    },
+    {
+      keys: ['python','automation','scripting','bash','ansible','terraform','devsecops','cicd','ci/cd','pipeline','jenkins','github actions'],
+      answer: `Sampath's automation toolkit:<br><br>
+• <strong>Python</strong> — SOAR playbooks, SIEM integrations, REST APIs, compliance reporting<br>
+• <strong>Terraform</strong> — Zero Trust IAM, cloud infra provisioning across AWS<br>
+• <strong>Ansible</strong> — automated GDPR/CCPA audit reports (saved 200+ hrs/year)<br>
+• <strong>Jenkins / GitHub Actions</strong> — DevSecOps CI/CD pipelines with Burp Suite + OWASP ZAP<br>
+• <strong>Bash / PowerShell</strong> — server hardening, STIG configurations`
+    },
+    {
+      keys: ['soar','incident response','playbook','automation','ir','isolation','revocation'],
+      answer: `Sampath built SOAR-based IR playbooks at Morgan Stanley:<br><br>
+• Python + REST APIs for <strong>automated EC2 isolation</strong> and <strong>IAM credential revocation</strong><br>
+• High-severity alerts trigger full containment within <strong>15 minutes</strong><br>
+• Also directed red/blue team exercises and threat hunting at Airbnb, remediating <strong>25+ critical vulnerabilities</strong>`
+    },
+    {
+      keys: ['skill','skills','technical','tools','technology','stack','expertise','proficient'],
+      answer: `Sampath's core skill areas:<br><br>
+🛡️ <strong>Detection & SOC</strong>: Splunk, Microsoft Sentinel, SOAR, MITRE ATT&CK, EDR/XDR<br>
+☁️ <strong>Cloud Security</strong>: AWS (IAM/EC2/S3/CloudTrail), Azure AD, Terraform, CSPM<br>
+⚙️ <strong>DevSecOps</strong>: Python, Bash, Jenkins, GitHub Actions, Burp Suite, OWASP ZAP<br>
+📋 <strong>Compliance</strong>: NIST CSF, NIST 800-53, SOC 2, SOX, ISO 27001, GDPR, CCPA<br>
+🔍 <strong>AppSec</strong>: Nessus, Qualys, WAF, web app security testing<br>
+🔐 <strong>Identity</strong>: CrowdStrike Falcon, Active Directory, Zero Trust, Secrets Management`
+    },
+    {
+      keys: ['cert','certification','certifications','isc2','comptia','security+','qualys','google','credentials'],
+      answer: `Sampath's certifications:<br><br>
+• 🔐 <strong>ISC2 – Certified in Cybersecurity (CC)</strong> — Active<br>
+• 🔎 <strong>Qualys – Vulnerability Management</strong> — Active<br>
+• 🛡️ <strong>Google Cybersecurity</strong> — Active<br>
+• 📚 <strong>CompTIA Security+</strong> — In Progress<br><br>
+Also holds a <strong>M.S. in Cyber Security</strong> from the University of Alabama at Birmingham (2025)`
+    },
+    {
+      keys: ['education','degree','university','masters','ms','uab','alabama','graduate','school'],
+      answer: `Sampath holds a <strong>Master of Science in Cyber Security</strong> from the <strong>University of Alabama at Birmingham</strong>, completed May 2025 (Birmingham, AL).`
+    },
+    {
+      keys: ['mitre','att&ck','attack','threat hunting','threat intelligence','ioc','indicator'],
+      answer: `Sampath applies MITRE ATT&CK deeply in practice:<br><br>
+• Developed MITRE ATT&CK-aligned correlation rules at Morgan Stanley<br>
+• Built <strong>60+ custom IOCs</strong> for threat hunting at Dell Technologies<br>
+• Directed red/blue team exercises at Airbnb<br>
+• Integrates threat intelligence into SIEM detection workflows`
+    },
+    {
+      keys: ['compliance','nist','sox','pci','gdpr','ccpa','iso','soc2','audit','governance','regulatory'],
+      answer: `Sampath's compliance expertise:<br><br>
+• <strong>SOX & PCI-DSS</strong>: cloud misconfig remediation at Morgan Stanley<br>
+• <strong>GDPR / CCPA</strong>: automated compliance reporting with Python + Ansible (200+ hrs/yr saved)<br>
+• <strong>NIST CSF / NIST 800-53</strong>, <strong>ISO 27001</strong>, <strong>SOC 2</strong> — advanced level<br>
+• Audit evidence management and recurring audit report generation`
+    },
+    {
+      keys: ['zero trust','zerotrust','least privilege','identity','iam','access control'],
+      answer: `Sampath implemented <strong>Zero Trust architecture</strong> at Airbnb:<br><br>
+• Terraform + IAM policies enforcing least-privilege access across AWS platform services<br>
+• Reduced unauthorized access attempts across all internal APIs<br>
+• Also consolidated secrets management from 25 fragmented stores → 6 centralized vault systems`
+    },
+    {
+      keys: ['contact','email','phone','reach','hire','connect','linkedin','message'],
+      answer: `You can reach Sampath here:<br><br>
+📧 <strong>Email</strong>: sampaththota2000@outlook.com<br>
+📱 <strong>Phone</strong>: +1 205-223-8288<br>
+💼 <strong>LinkedIn</strong>: linkedin.com/in/sampath-thota<br><br>
+He's actively seeking cybersecurity roles in SOC, cloud security, and DevSecOps.`
+    },
+    {
+      keys: ['available','open to work','sponsorship','visa','relocate','location','hire','looking for','job','opportunity','birmingham'],
+      answer: `Yes! Sampath is <strong>actively looking for work</strong>:<br><br>
+• 📍 Based in <strong>Birmingham, AL</strong><br>
+• 🇺🇸 <strong>US work-authorized — no sponsorship needed</strong><br>
+• ✈️ Open to relocation anywhere in the US<br>
+• Targeting: SOC Engineering, Cloud Security, DevSecOps roles`
+    },
+    {
+      keys: ['resume','cv','download','pdf'],
+      answer: `You can download Sampath's full resume as a PDF using the <strong>Download Resume</strong> button in the Contact section, or <a href="Sampath_Thota_Resume.pdf" download style="color:var(--accent)">click here</a>.`
+    },
+    {
+      keys: ['summary','about','who','introduce','tell me','overview','sampath'],
+      answer: `Sampath Thota is a <strong>Cybersecurity Engineer with 4+ years of experience</strong> in:<br><br>
+• SOC detection engineering<br>
+• Cloud security (AWS/Azure)<br>
+• DevSecOps automation<br><br>
+He's built end-to-end security workflows across financial services (Morgan Stanley), platform tech (Airbnb), and enterprise infrastructure (Dell). Currently based in Birmingham, AL — US work-authorized, open to relocation.`
+    },
+    {
+      keys: ['false positive','fp','alert fatigue','noise','tuning'],
+      answer: `At <strong>Morgan Stanley</strong>, Sampath eliminated <strong>120+ recurring false positives per month</strong> by:<br><br>
+• Developing risk-based alerting replacing static thresholds<br>
+• Building MITRE ATT&CK-aligned correlation rules<br>
+• Improving Tier 1 triage efficiency in 24/7 regulated environments<br><br>
+At Airbnb, he also reduced scan false positives by <strong>70%</strong> in DevSecOps pipelines.`
+    },
+    {
+      keys: ['crowdstrike','falcon','edr','endpoint','xdr'],
+      answer: `At <strong>Dell Technologies</strong>, Sampath developed Python-based SIEM integrations with <strong>CrowdStrike Falcon</strong>:<br><br>
+• Created <strong>60+ custom IOCs</strong> for automated threat hunting<br>
+• Reduced endpoint response time from <strong>4.2 hours → 45 minutes</strong><br>
+• Supported incident response investigations using CyberSense analytics for 45+ events`
+    },
+    {
+      keys: ['response time','mttr','time to respond','incident','triage','how fast'],
+      answer: `Sampath has consistently driven down response times:<br><br>
+• <strong>Morgan Stanley</strong>: MTTR <strong>5h → 3.2h</strong> (36% reduction) via Splunk + Sentinel optimization<br>
+• <strong>Dell Technologies</strong>: Endpoint response <strong>4.2h → 45 minutes</strong> via CrowdStrike + custom IOCs<br>
+• Automated EC2 isolation and IAM revocation within <strong>15 minutes</strong> via SOAR`
+    },
+  ];
+
+  const FALLBACK = `I'm not sure about that specific topic. You can ask me about:<br><br>
+• Work experience (Morgan Stanley, Airbnb, Dell)<br>
+• Skills (Splunk, AWS, Python, SOAR, etc.)<br>
+• Certifications & education<br>
+• Availability & contact info`;
+
+  function getResponse(input) {
+    const q = input.toLowerCase();
+    for (const entry of KB) {
+      if (entry.keys.some(k => q.includes(k))) return entry.answer;
+    }
+    return FALLBACK;
+  }
+
+  function timestamp() {
+    const now = new Date();
+    return now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  }
+
+  function addMessage(text, role) {
+    const msgs = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-time">${timestamp()}</div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+    return div;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.id = 'typing-msg';
+    div.innerHTML = `<div class="msg-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('typing-msg');
+    if (t) t.remove();
+  }
+
+  function sendMessage(text) {
+    if (!text.trim()) return;
+    addMessage(text, 'user');
+    document.getElementById('chat-input').value = '';
+    document.getElementById('chat-suggestions').style.display = 'none';
+    showTyping();
+    setTimeout(() => {
+      removeTyping();
+      addMessage(getResponse(text), 'bot');
+    }, 700 + Math.random() * 400);
+  }
+
+  document.getElementById('chat-btn').addEventListener('click', () => {
+    const btn = document.getElementById('chat-btn');
+    const win = document.getElementById('chat-window');
+    btn.classList.toggle('open');
+    win.classList.toggle('open');
+    if (win.classList.contains('open') && document.getElementById('chat-messages').children.length === 0) {
+      setTimeout(() => addMessage(`Hi! 👋 I'm Sampath's portfolio assistant. Ask me about his experience, skills, certifications, or anything else. How can I help?`, 'bot'), 300);
+    }
+  });
+
+  document.getElementById('chat-send').addEventListener('click', () => {
+    sendMessage(document.getElementById('chat-input').value);
+  });
+
+  document.getElementById('chat-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') sendMessage(e.target.value);
+  });
+
+  document.querySelectorAll('.suggestion-chip').forEach(chip => {
+    chip.addEventListener('click', () => sendMessage(chip.textContent));
+  });
+
+  document.querySelectorAll('#chat-btn, #chat-send, #chat-input, .suggestion-chip').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      const cur = document.getElementById('cursor');
+      const rng = document.getElementById('cursorRing');
+      if (cur) { cur.style.width='18px'; cur.style.height='18px'; }
+      if (rng) { rng.style.width='52px'; rng.style.height='52px'; rng.style.opacity='0.8'; }
+    });
+    el.addEventListener('mouseleave', () => {
+      const cur = document.getElementById('cursor');
+      const rng = document.getElementById('cursorRing');
+      if (cur) { cur.style.width='10px'; cur.style.height='10px'; }
+      if (rng) { rng.style.width='36px'; rng.style.height='36px'; rng.style.opacity='0.5'; }
+    });
+  });
+})();
+</script>
 </body>
 </html>
