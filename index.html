@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sampath Thota — Cybersecurity Engineer</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #050a0f;
+  --bg2: #080f18;
+  --surface: #0c1622;
+  --border: rgba(0,255,170,0.12);
+  --accent: #00ffaa;
+  --accent2: #00bfff;
+  --accent3: #ff6b35;
+  --text: #e8f4f0;
+  --muted: #6a8a7a;
+  --danger: #ff4757;
+  --warn: #ffa502;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Syne', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  cursor: none;
+}
+/* CUSTOM CURSOR */
+.cursor {
+  width: 10px; height: 10px;
+  background: var(--accent);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: transform 0.08s, width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: screen;
+}
+.cursor-ring {
+  width: 36px; height: 36px;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  position: fixed; top: 0; left: 0;
+  pointer-events: none; z-index: 9998;
+  transform: translate(-50%,-50%);
+  transition: transform 0.18s ease, width 0.2s, height 0.2s, border-color 0.2s;
+  opacity: 0.5;
+}
+body:hover .cursor { opacity: 1; }
+
+/* CANVAS BG */
+#bg-canvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  opacity: 0.35;
+}
+
+/* LAYOUT */
+main { position: relative; z-index: 1; }
+section { padding: 100px 0; }
+.container { max-width: 1140px; margin: 0 auto; padding: 0 40px; }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(5,10,15,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+.nav-logo span { color: var(--muted); }
+.nav-links { display: flex; gap: 32px; list-style: none; }
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  position: relative;
+}
+.nav-links a::after {
+  content: '';
+  position: absolute; bottom: -3px; left: 0; right: 0;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transition: transform 0.2s;
+}
+.nav-links a:hover { color: var(--accent); }
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-status {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+}
+.pulse {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(0,255,170,0.6); }
+  50% { box-shadow: 0 0 0 8px rgba(0,255,170,0); }
+}
+
+/* HERO */
+#hero {
+  min-height: 100vh;
+  display: flex; align-items: center;
+  padding-top: 80px;
+  position: relative;
+}
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+.hero-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.2s forwards;
+}
+.hero-name {
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 16px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.35s forwards;
+}
+.hero-name .accent { color: var(--accent); }
+.hero-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.5s forwards;
+}
+.hero-desc {
+  font-size: 17px;
+  color: rgba(232,244,240,0.7);
+  line-height: 1.7;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.65s forwards;
+  max-width: 480px;
+}
+.hero-ctas {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.8s forwards;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: all 0.2s;
+  cursor: none;
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+.btn-primary:hover { background: #00e699; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,255,170,0.3); }
+.btn-ghost {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+/* STATS PANEL */
+.hero-stats {
+  opacity: 0;
+  animation: fadeUp 0.7s 0.95s forwards;
+}
+.stats-terminal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.terminal-bar {
+  background: #111d2a;
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot-r { background: #ff5f57; }
+.dot-y { background: #febc2e; }
+.dot-g { background: #28c840; }
+.terminal-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 8px;
+}
+.terminal-body { padding: 24px; }
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  display: flex; gap: 10px; align-items: center;
+}
+.stat-label .prompt { color: var(--accent); }
+.stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent2);
+}
+.stat-bar-wrap { margin-top: 6px; }
+.stat-bar {
+  height: 2px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  width: 0;
+  transition: width 1.5s cubic-bezier(0.25,1,0.5,1);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* SECTION HEADERS */
+.sec-header {
+  margin-bottom: 60px;
+}
+.sec-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.sec-title {
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+.sec-line {
+  width: 48px; height: 2px;
+  background: var(--accent);
+  margin-top: 20px;
+}
+
+/* EXPERIENCE */
+#experience { background: var(--bg2); }
+.exp-grid { display: flex; flex-direction: column; gap: 0; }
+.exp-item {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  cursor: none;
+}
+.exp-item:first-child { border-top: 1px solid var(--border); }
+.exp-sidebar {
+  padding: 40px 32px 40px 0;
+  border-right: 1px solid var(--border);
+}
+.exp-company {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.exp-period {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.exp-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.tag-current { background: rgba(0,255,170,0.12); color: var(--accent); border: 1px solid rgba(0,255,170,0.2); }
+.tag-prev { background: rgba(0,191,255,0.08); color: var(--accent2); border: 1px solid rgba(0,191,255,0.15); }
+.tag-early { background: rgba(255,107,53,0.08); color: var(--accent3); border: 1px solid rgba(255,107,53,0.15); }
+
+.exp-main {
+  padding: 40px 0 40px 40px;
+}
+.exp-role {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+.exp-bullets { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.exp-bullets li {
+  display: flex; gap: 12px;
+  font-size: 14px;
+  color: rgba(232,244,240,0.75);
+  line-height: 1.6;
+}
+.exp-bullets li::before {
+  content: '▸';
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.exp-bullets .metric {
+  color: var(--accent);
+  font-weight: 700;
+}
+.exp-tech {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 24px;
+}
+.tech-chip {
+  padding: 5px 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+}
+.tech-chip:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,255,170,0.06); }
+
+/* SKILLS */
+#skills { background: var(--bg); }
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.skill-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 28px;
+  transition: border-color 0.2s, transform 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.skill-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+.skill-card:hover { border-color: rgba(0,255,170,0.25); transform: translateY(-4px); }
+.skill-card:hover::before { transform: scaleX(1); }
+.skill-icon { font-size: 24px; margin-bottom: 14px; }
+.skill-name { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+.skill-items { display: flex; flex-direction: column; gap: 10px; }
+.skill-item { }
+.skill-item-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: flex; justify-content: space-between;
+}
+.skill-item-name span { color: var(--accent); }
+.skill-bar { height: 2px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+.skill-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0;
+  transition: width 1.4s cubic-bezier(0.25,1,0.5,1);
+}
+.fill-accent { background: var(--accent); }
+.fill-blue { background: var(--accent2); }
+.fill-orange { background: var(--accent3); }
+
+/* PROJECTS */
+#projects { background: var(--bg2); }
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.proj-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 32px;
+  transition: all 0.25s;
+  cursor: none;
+  position: relative;
+  overflow: hidden;
+}
+.proj-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 0;
+  background: linear-gradient(180deg, transparent, rgba(0,255,170,0.04));
+  transition: height 0.3s;
+}
+.proj-card:hover { border-color: rgba(0,255,170,0.3); transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+.proj-card:hover::after { height: 100%; }
+.proj-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+.proj-title { font-size: 18px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+.proj-company {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.proj-desc {
+  font-size: 13px;
+  color: rgba(232,244,240,0.6);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+.proj-metrics { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.proj-metric {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.proj-metric-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.proj-metric-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.proj-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.proj-tag {
+  padding: 3px 8px;
+  background: rgba(0,255,170,0.06);
+  border: 1px solid rgba(0,255,170,0.12);
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+/* CERTIFICATIONS */
+#certs { background: var(--bg); }
+.certs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.cert-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.25s;
+}
+.cert-card:hover { border-color: rgba(0,255,170,0.3); transform: translateY(-4px); }
+.cert-icon { font-size: 32px; margin-bottom: 12px; }
+.cert-name { font-size: 14px; font-weight: 700; margin-bottom: 6px; line-height: 1.3; }
+.cert-issuer { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+.cert-status {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.cert-active { background: rgba(0,255,170,0.08); color: var(--accent); border: 1px solid rgba(0,255,170,0.2); }
+
+/* CONTACT */
+#contact {
+  background: var(--bg2);
+  text-align: center;
+}
+.contact-inner { max-width: 640px; margin: 0 auto; }
+.contact-note {
+  font-size: 17px;
+  color: rgba(232,244,240,0.6);
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+.contact-links {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 16px;
+  margin-bottom: 48px;
+}
+.contact-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  transition: all 0.2s;
+  cursor: none;
+}
+.contact-link:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+.contact-link .icon { font-size: 16px; }
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative; z-index: 1;
+}
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.footer-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* SCROLL REVEAL */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-stats { display: none; }
+  .skills-grid, .projects-grid { grid-template-columns: 1fr 1fr; }
+  .certs-grid { grid-template-columns: 1fr 1fr; }
+  .exp-item { grid-template-columns: 1fr; }
+  .exp-sidebar { border-right: none; border-bottom: 1px solid var(--border); padding: 24px 0 20px 0; }
+  .exp-main { padding: 24px 0; }
+}
+@media (max-width: 600px) {
+  .skills-grid, .projects-grid, .certs-grid { grid-template-columns: 1fr; }
+  nav { padding: 16px 20px; }
+  .nav-links { display: none; }
+  .container { padding: 0 20px; }
+}
+
+/* GLITCH EFFECT ON NAME */
+.glitch {
+  position: relative;
+}
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.glitch::before {
+  color: var(--accent2);
+  animation: glitch1 4s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+.glitch::after {
+  color: var(--accent3);
+  animation: glitch2 4s infinite;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+@keyframes glitch1 {
+  0%,90%,100% { transform: translate(0); opacity: 0; }
+  92% { transform: translate(-3px, 1px); opacity: 0.7; }
+  94% { transform: translate(3px, -1px); opacity: 0.7; }
+  96% { transform: translate(-1px); opacity: 0; }
+}
+@keyframes glitch2 {
+  0%,90%,100% { transform: translate(0); opacity: 0; }
+  93% { transform: translate(3px, 1px); opacity: 0.5; }
+  95% { transform: translate(-3px, -1px); opacity: 0.5; }
+  97% { transform: translate(1px); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <div class="nav-logo"><span>~/</span>sampath.thota</div>
+  <ul class="nav-links">
+    <li><a href="#experience">experience</a></li>
+    <li><a href="#skills">skills</a></li>
+    <li><a href="#projects">projects</a></li>
+    <li><a href="#certs">certs</a></li>
+    <li><a href="#contact">contact</a></li>
+  </ul>
+  <div class="nav-status"><div class="pulse"></div>open to work</div>
+</nav>
+
+<main>
+<!-- HERO -->
+<section id="hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-tag">// cybersecurity engineer</div>
+        <h1 class="hero-name glitch" data-text="Sampath Thota">
+          <span class="accent">Sampath</span><br>Thota
+        </h1>
+        <div class="hero-title">SOC · Cloud Security · DevSecOps</div>
+        <p class="hero-desc">4+ years building detection-first, automation-driven security systems across financial services and tech. Splunk → Sentinel → SOAR → AWS. No sponsorship needed.</p>
+        <div class="hero-ctas">
+          <a href="#contact" class="btn btn-primary">↗ Get in Touch</a>
+          <a href="#experience" class="btn btn-ghost">View Experience</a>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stats-terminal">
+          <div class="terminal-bar">
+            <div class="dot dot-r"></div>
+            <div class="dot dot-y"></div>
+            <div class="dot dot-g"></div>
+            <div class="terminal-title">security_metrics.sh</div>
+          </div>
+          <div class="terminal-body">
+            <div class="stat-row">
+              <div>
+                <div class="stat-label"><span class="prompt">$</span> yrs_experience</div>
+                <div class="stat-bar-wrap">
+                  <div class="stat-bar"><div class="stat-bar-fill" data-width="85"></div></div>
+                </div>
+              </div>
+              <div class="stat-val">4+</div>
+            </div>
+            <div class="stat-row">
+              <div>
+                <div class="stat-label"><span class="prompt">$</span> false_pos_reduced / mo</div>
+                <div class="stat-bar-wrap">
+                  <div class="stat-bar"><div class="stat-bar-fill" data-width="92"></div></div>
+                </div>
+              </div>
+              <div class="stat-val">120+</div>
+            </div>
+            <div class="stat-row">
+              <div>
+                <div class="stat-label"><span class="prompt">$</span> response_time_hours</div>
+                <div class="stat-bar-wrap">
+                  <div class="stat-bar"><div class="stat-bar-fill" data-width="64"></div></div>
+                </div>
+              </div>
+              <div class="stat-val">5→3.2h</div>
+            </div>
+            <div class="stat-row">
+              <div>
+                <div class="stat-label"><span class="prompt">$</span> misconfigs_remediated</div>
+                <div class="stat-bar-wrap">
+                  <div class="stat-bar"><div class="stat-bar-fill" data-width="78"></div></div>
+                </div>
+              </div>
+              <div class="stat-val">110+</div>
+            </div>
+            <div class="stat-row">
+              <div>
+                <div class="stat-label"><span class="prompt">$</span> vuln_sla_days</div>
+                <div class="stat-bar-wrap">
+                  <div class="stat-bar"><div class="stat-bar-fill" data-width="77"></div></div>
+                </div>
+              </div>
+              <div class="stat-val">30→7d</div>
+            </div>
+            <div class="stat-row">
+              <div>
+                <div class="stat-label"><span class="prompt">$</span> custom_iocs_built</div>
+                <div class="stat-bar-wrap">
+                  <div class="stat-bar"><div class="stat-bar-fill" data-width="70"></div></div>
+                </div>
+              </div>
+              <div class="stat-val">60+</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section id="experience">
+  <div class="container">
+    <div class="sec-header reveal">
+      <div class="sec-eyebrow">// 01 — work history</div>
+      <h2 class="sec-title">Experience</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="exp-grid">
+
+      <div class="exp-item reveal">
+        <div class="exp-sidebar">
+          <div class="exp-company">Morgan Stanley</div>
+          <div class="exp-period">Sep 2025 – Present</div>
+          <span class="exp-tag tag-current">Current</span>
+        </div>
+        <div class="exp-main">
+          <div class="exp-role">Cyber Security Engineer</div>
+          <ul class="exp-bullets">
+            <li>Optimized Splunk + Microsoft Sentinel workflows ingesting AWS CloudTrail &amp; EDR telemetry — cut response time from <span class="metric">5 → 3.2 hours</span>.</li>
+            <li>Developed MITRE ATT&amp;CK-aligned correlation rules &amp; risk-based alerts, eliminating <span class="metric">120+ recurring false positives</span> per month.</li>
+            <li>Built SOAR playbooks (Python + REST APIs) for automated EC2 isolation &amp; IAM revocation within <span class="metric">15 minutes</span> of high-severity alerts.</li>
+            <li>Remediated <span class="metric">110+ cloud misconfigurations</span> across S3, RDS &amp; KMS aligned with SOX and PCI-DSS standards.</li>
+          </ul>
+          <div class="exp-tech">
+            <span class="tech-chip">Splunk</span><span class="tech-chip">Microsoft Sentinel</span><span class="tech-chip">AWS</span><span class="tech-chip">SOAR</span><span class="tech-chip">Python</span><span class="tech-chip">MITRE ATT&CK</span><span class="tech-chip">SOX</span><span class="tech-chip">PCI-DSS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-item reveal">
+        <div class="exp-sidebar">
+          <div class="exp-company">Airbnb</div>
+          <div class="exp-period">Aug 2021 – Dec 2023</div>
+          <span class="exp-tag tag-prev">Previous</span>
+        </div>
+        <div class="exp-main">
+          <div class="exp-role">Cyber Security Engineer</div>
+          <ul class="exp-bullets">
+            <li>Implemented Zero Trust architecture via Terraform + IAM, enforcing least-privilege across all internal APIs.</li>
+            <li>Engineered DevSecOps pipeline (Burp Suite + OWASP ZAP → CI/CD), cutting vuln remediation SLA from <span class="metric">30 → 7 days</span> and false positives by <span class="metric">70%</span>.</li>
+            <li>Secured <span class="metric">150+ public-facing endpoints</span> with runtime protection + WAF, mitigating OWASP Top 10 risks.</li>
+            <li>Consolidated <span class="metric">25 fragmented secret stores → 6</span> centralized vault systems, reducing credential exposure.</li>
+            <li>Automated GDPR/CCPA reporting (Python + Ansible), generating <span class="metric">16+ recurring audit reports</span> and saving <span class="metric">200+ hours/year</span>.</li>
+          </ul>
+          <div class="exp-tech">
+            <span class="tech-chip">Zero Trust</span><span class="tech-chip">Terraform</span><span class="tech-chip">Burp Suite</span><span class="tech-chip">OWASP ZAP</span><span class="tech-chip">Jenkins</span><span class="tech-chip">Ansible</span><span class="tech-chip">GDPR</span><span class="tech-chip">CCPA</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-item reveal">
+        <div class="exp-sidebar">
+          <div class="exp-company">Dell Technologies</div>
+          <div class="exp-period">Jan 2020 – Jul 2021</div>
+          <span class="exp-tag tag-early">Early Career</span>
+        </div>
+        <div class="exp-main">
+          <div class="exp-role">Junior Cyber Security Engineer</div>
+          <ul class="exp-bullets">
+            <li>Implemented network segmentation via AD Group Policies, reducing lateral movement risk across <span class="metric">850+ endpoints</span>.</li>
+            <li>Deployed PowerProtect Cyber Recovery vaults (AWS CloudFormation + Terraform) across <span class="metric">5 data centers</span>, protecting <span class="metric">12TB</span> of critical data.</li>
+            <li>Built Python SIEM integrations with CrowdStrike Falcon; created <span class="metric">60+ custom IOCs</span>, cutting endpoint response from <span class="metric">4.2 hours → 45 minutes</span>.</li>
+            <li>Applied STIG hardening configurations via PowerShell across <span class="metric">150+ servers</span>.</li>
+          </ul>
+          <div class="exp-tech">
+            <span class="tech-chip">CrowdStrike Falcon</span><span class="tech-chip">Active Directory</span><span class="tech-chip">PowerShell</span><span class="tech-chip">CloudFormation</span><span class="tech-chip">Terraform</span><span class="tech-chip">STIG</span><span class="tech-chip">Metasploit</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="container">
+    <div class="sec-header reveal">
+      <div class="sec-eyebrow">// 02 — capabilities</div>
+      <h2 class="sec-title">Technical Skills</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="skills-grid">
+
+      <div class="skill-card reveal">
+        <div class="skill-icon">🛡️</div>
+        <div class="skill-name">Security Monitoring & Detection</div>
+        <div class="skill-items">
+          <div class="skill-item">
+            <div class="skill-item-name">Splunk Enterprise SIEM <span>Expert</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="92"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Microsoft Sentinel <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="85"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">SOAR Playbooks <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="80"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">MITRE ATT&CK <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="88"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-card reveal">
+        <div class="skill-icon">☁️</div>
+        <div class="skill-name">Cloud & Infrastructure Security</div>
+        <div class="skill-items">
+          <div class="skill-item">
+            <div class="skill-item-name">AWS Security <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="88"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">IAM / Zero Trust <span>Expert</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="90"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Terraform / IaC <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="82"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">CSPM <span>Proficient</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="75"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-card reveal">
+        <div class="skill-icon">⚙️</div>
+        <div class="skill-name">Automation & DevSecOps</div>
+        <div class="skill-items">
+          <div class="skill-item">
+            <div class="skill-item-name">Python <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="87"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Bash Scripting <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="80"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">CI/CD Security (Jenkins/GitHub) <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="82"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Ansible <span>Proficient</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="72"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-card reveal">
+        <div class="skill-icon">📋</div>
+        <div class="skill-name">Compliance & Governance</div>
+        <div class="skill-items">
+          <div class="skill-item">
+            <div class="skill-item-name">NIST CSF / 800-53 <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="85"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">SOC 2 / SOX ITGC <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="82"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">ISO 27001 <span>Proficient</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="76"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">GDPR / CCPA <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-accent" data-w="80"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-card reveal">
+        <div class="skill-icon">🔍</div>
+        <div class="skill-name">Vulnerability & AppSec</div>
+        <div class="skill-items">
+          <div class="skill-item">
+            <div class="skill-item-name">Burp Suite / OWASP ZAP <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="84"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Nessus / Qualys <span>Proficient</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="75"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">WAF Configuration <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="80"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Pen Testing (Metasploit) <span>Proficient</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-blue" data-w="72"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skill-card reveal">
+        <div class="skill-icon">🔐</div>
+        <div class="skill-name">Identity & Endpoint</div>
+        <div class="skill-items">
+          <div class="skill-item">
+            <div class="skill-item-name">CrowdStrike Falcon <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="83"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Active Directory / GPO <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="80"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">EDR/XDR Platforms <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="78"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-item-name">Secrets Management <span>Advanced</span></div>
+            <div class="skill-bar"><div class="skill-fill fill-orange" data-w="82"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="container">
+    <div class="sec-header reveal">
+      <div class="sec-eyebrow">// 03 — key projects</div>
+      <h2 class="sec-title">Impact Highlights</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="projects-grid">
+
+      <div class="proj-card reveal">
+        <div class="proj-num">01 / Morgan Stanley</div>
+        <div class="proj-title">Financial Cloud Threat Detection & Automated IR</div>
+        <div class="proj-company">Morgan Stanley · 2025–Present</div>
+        <div class="proj-desc">Redesigned SOC detection layer for high-volume financial workloads — shifting from static thresholds to risk-based alerting with full SOAR automation.</div>
+        <div class="proj-metrics">
+          <div class="proj-metric">
+            <div class="proj-metric-val">120+</div>
+            <div class="proj-metric-label">FP/mo eliminated</div>
+          </div>
+          <div class="proj-metric">
+            <div class="proj-metric-val">36%</div>
+            <div class="proj-metric-label">Response time cut</div>
+          </div>
+          <div class="proj-metric">
+            <div class="proj-metric-val">110+</div>
+            <div class="proj-metric-label">Misconfigs fixed</div>
+          </div>
+        </div>
+        <div class="proj-tags">
+          <span class="proj-tag">Splunk</span><span class="proj-tag">Sentinel</span><span class="proj-tag">SOAR</span><span class="proj-tag">AWS</span><span class="proj-tag">SOX</span>
+        </div>
+      </div>
+
+      <div class="proj-card reveal">
+        <div class="proj-num">02 / Airbnb</div>
+        <div class="proj-title">Zero Trust & DevSecOps Security Transformation</div>
+        <div class="proj-company">Airbnb · 2021–2023</div>
+        <div class="proj-desc">End-to-end security modernization: Zero Trust IAM enforcement, shift-left vulnerability detection in CI/CD, and centralized secrets governance across multi-cloud.</div>
+        <div class="proj-metrics">
+          <div class="proj-metric">
+            <div class="proj-metric-val">76%</div>
+            <div class="proj-metric-label">SLA improvement</div>
+          </div>
+          <div class="proj-metric">
+            <div class="proj-metric-val">70%</div>
+            <div class="proj-metric-label">Scan FP reduction</div>
+          </div>
+          <div class="proj-metric">
+            <div class="proj-metric-val">200h</div>
+            <div class="proj-metric-label">Saved annually</div>
+          </div>
+        </div>
+        <div class="proj-tags">
+          <span class="proj-tag">Zero Trust</span><span class="proj-tag">Terraform</span><span class="proj-tag">CI/CD</span><span class="proj-tag">GDPR</span>
+        </div>
+      </div>
+
+      <div class="proj-card reveal">
+        <div class="proj-num">03 / Dell Technologies</div>
+        <div class="proj-title">Enterprise Ransomware Resilience & Hardening</div>
+        <div class="proj-company">Dell Technologies · 2020–2021</div>
+        <div class="proj-desc">Ransomware defense program across 850+ endpoints — immutable vault deployment, network segmentation, and custom IOC-based SIEM automation.</div>
+        <div class="proj-metrics">
+          <div class="proj-metric">
+            <div class="proj-metric-val">12TB</div>
+            <div class="proj-metric-label">Data protected</div>
+          </div>
+          <div class="proj-metric">
+            <div class="proj-metric-val">45min</div>
+            <div class="proj-metric-label">Response (was 4.2h)</div>
+          </div>
+          <div class="proj-metric">
+            <div class="proj-metric-val">60+</div>
+            <div class="proj-metric-label">Custom IOCs built</div>
+          </div>
+        </div>
+        <div class="proj-tags">
+          <span class="proj-tag">CrowdStrike</span><span class="proj-tag">CloudFormation</span><span class="proj-tag">STIG</span><span class="proj-tag">Python</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CERTS -->
+<section id="certs">
+  <div class="container">
+    <div class="sec-header reveal">
+      <div class="sec-eyebrow">// 04 — credentials</div>
+      <h2 class="sec-title">Certifications & Education</h2>
+      <div class="sec-line"></div>
+    </div>
+    <div class="certs-grid">
+      <div class="cert-card reveal">
+        <div class="cert-icon">🔐</div>
+        <div class="cert-name">Certified in Cybersecurity (CC)</div>
+        <div class="cert-issuer">ISC2</div>
+        <span class="cert-status cert-active">Active</span>
+      </div>
+      <div class="cert-card reveal">
+        <div class="cert-icon">🔎</div>
+        <div class="cert-name">Vulnerability Management</div>
+        <div class="cert-issuer">Qualys</div>
+        <span class="cert-status cert-active">Active</span>
+      </div>
+      <div class="cert-card reveal">
+        <div class="cert-icon">🛡️</div>
+        <div class="cert-name">Google Cybersecurity</div>
+        <div class="cert-issuer">Google</div>
+        <span class="cert-status cert-active">Active</span>
+      </div>
+      <div class="cert-card reveal">
+        <div class="cert-icon">🎓</div>
+        <div class="cert-name">M.S. Cyber Security</div>
+        <div class="cert-issuer">Univ. of Alabama Birmingham · 2025</div>
+        <span class="cert-status cert-active">Completed</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-inner">
+      <div class="sec-header reveal">
+        <div class="sec-eyebrow">// 05 — let's connect</div>
+        <h2 class="sec-title">Get In Touch</h2>
+        <div class="sec-line" style="margin: 20px auto 0;"></div>
+      </div>
+      <p class="contact-note reveal">
+        Actively seeking cybersecurity engineer roles across SOC, cloud security, and DevSecOps. US work-authorized — no sponsorship needed. Open to relocation anywhere in the US.
+      </p>
+      <div class="contact-links reveal">
+        <a href="mailto:sampaththota2000@outlook.com" class="contact-link">
+          <span class="icon">✉️</span> sampaththota2000@outlook.com
+        </a>
+        <a href="tel:+12052238288" class="contact-link">
+          <span class="icon">📱</span> +1 205-223-8288
+        </a>
+        <a href="https://linkedin.com" target="_blank" class="contact-link">
+          <span class="icon">💼</span> LinkedIn Profile
+        </a>
+        <a href="#" class="contact-link">
+          <span class="icon">📄</span> Download Resume
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="footer-copy">© 2026 Sampath Thota — Birmingham, AL</div>
+  <div class="footer-status"><div class="pulse"></div>Available for opportunities</div>
+</footer>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; cursor.style.left = mx+'px'; cursor.style.top = my+'px'; });
+function animRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) *.12;
+  ring.style.left = rx+'px'; ring.style.top = ry+'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.querySelectorAll('a, button, .exp-item, .proj-card, .skill-card').forEach(el => {
+  el.addEventListener('mouseenter', () => { cursor.style.width='18px'; cursor.style.height='18px'; ring.style.width='52px'; ring.style.height='52px'; ring.style.borderColor='var(--accent)'; ring.style.opacity='0.8'; });
+  el.addEventListener('mouseleave', () => { cursor.style.width='10px'; cursor.style.height='10px'; ring.style.width='36px'; ring.style.height='36px'; ring.style.borderColor='var(--accent)'; ring.style.opacity='0.5'; });
+});
+
+// CANVAS GRID
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resize(); window.addEventListener('resize', resize);
+const nodes = [];
+for (let i = 0; i < 60; i++) {
+  nodes.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, vx: (Math.random()-.5)*0.4, vy: (Math.random()-.5)*0.4 });
+}
+function drawCanvas() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  nodes.forEach(n => {
+    n.x += n.vx; n.y += n.vy;
+    if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+    if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+  });
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i+1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < 160) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(0,255,170,${0.12*(1-dist/160)})`;
+        ctx.lineWidth = 0.5;
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
+    }
+    ctx.beginPath();
+    ctx.arc(nodes[i].x, nodes[i].y, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(0,255,170,0.4)';
+    ctx.fill();
+  }
+  requestAnimationFrame(drawCanvas);
+}
+drawCanvas();
+
+// SCROLL REVEAL
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), 80);
+      obs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+reveals.forEach(r => obs.observe(r));
+
+// SKILL BARS & STAT BARS on visible
+const barObs = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.querySelectorAll('.skill-fill').forEach(b => {
+        setTimeout(() => { b.style.width = b.dataset.w + '%'; }, 200);
+      });
+      entry.target.querySelectorAll('.stat-bar-fill').forEach(b => {
+        setTimeout(() => { b.style.width = b.dataset.width + '%'; }, 200);
+      });
+      barObs.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.skill-card, .stats-terminal').forEach(c => barObs.observe(c));
+</script>
+</body>
+</html>
